@@ -1,14 +1,15 @@
 ;=====================================================================================
 ;====================================== HOSTBOT ======================================
-;============================== TWITCH.TV/TWITCHBLUECAT ==============================
-;=============================== AUTO !HOSTME v0.1.3.0 ===============================
+;================================= TWITCH.TV/MRDOCDC =================================
+;=============================== AUTO !HOSTME v0.1.4.3 ===============================
 ;=====================================================================================
 ;====== Please do not edit below this line unless you know what you are doing!! ======
-;==                   This the basic release for Auto !HOSTME Bot                   ==    
+;==                   This the basic release for Auto !HOSTME Bot                   ==
+;==                This bot will type !HOSTME for you automatically!                ==
 ;==           Simple and open source. Questions/Support Contect me below:           ==
-;==                            Twitter:   @TwitchBlueCat                            ==
+;==                               Twitter:   @MrDocDC                               ==
 ;==                      Discord:   https://discord.gg/ns2uTBS                      ==
-;==                       Web: https://bluecat.live/support/                        ==
+;==                         Web: https://bluecat.live/faq/                          ==
 ;============================          Enjoy  :)          ============================
 ;=====================================================================================
 
@@ -24,7 +25,12 @@
 ;===============CONNECTION AND DISCONNECT===============
 
 ON *:CONNECT: {
-  SET %version 0.1.3.0
+  SET %version 0.1.4.3
+  window -g1 @Logs
+  echo -m @Logs $timestamp Auto Hostme Bot Successfully loaded. Version: %version
+  echo -m @Logs $timestamp 3To check for the latest version:12 https://bluecat.live/update/
+  echo -m @Logs $timestamp
+  echo -m @Logs $timestamp
   IF ($server == tmi.twitch.tv) {
     timers off
     twitchpart
@@ -38,6 +44,8 @@ ON *:CONNECT: {
     }
     if (%advertson) { startad }
     startclear
+    SET %myName $me
+    VAR %livecheck $livechecker(%myName)
   }
 }
 ON *:DISCONNECT:IF ($server == tmi.twitch.tv) twitchpart
@@ -54,13 +62,11 @@ alias twitchpart {
 ;==================== menu aliases =====================
 
 menu query,channel,status {
-  $style(2) &Version %version:$null
-  -
-  $IIF(%advertson,&Advertising is ON,&Advertizing is OFF) [Click to turn advertising $IIF(%advertson,off,on) $+ ]:advertson_switch
+  $style(2) &Version  %version:$null 
   -
   Help
-  .Trouble Shooting &Video: /url https://www.youtube.com/channel/UCI4C1vG7LMqnwfimJQe6VcA/playlists
-  .Trouble Shooting &Link: /url https://bluecat.live/faq/
+  .Trouble Shooting &Video: /url https://www.youtube.com/channel/UCI4C1vG7LMqnwfimJQe6VcA/playlists
+  .Trouble Shooting &Link: /url https://bluecat.live/faq/
   -
   Check For &Updates: /url https://bluecat.live/update/
   -
@@ -68,32 +74,31 @@ menu query,channel,status {
   -
   &Clear &Current Screen:/clear
 }
-
-alias -l advertson_switch {
-  IF (%advertson) {
-    UNSET %advertson
-    echo -m @Logs $timestamp Timers have been turned off.
-    SET %adsmanual $true
-  }
-  ELSE {
-    SET %advertson $true
-    echo -m @Logs $timestamp Timers have been turned on.
-  }
+menu @Logs  {
+  Clear
+  .Clear Current://clear
+  .Clear All://clearall
 }
 ;=======================================================
 ;===================== bot scripts =====================
 
 ;;waits for unhost, picks a random number between 1 and 45, posts !hostme in that (random)time in seconds
 ON *:NOTICE:*Exited host mode*:#: {
-  if (%advertson) {
-    if (# == p0sitivitybot) {
-      timer $+ $chan 1 $rand(1,45) { msg $chan ?hostme | echo -m @Logs $timestamp Entered you were entered into the raffle for channel $+ $chan $+ . }
+  VAR %livecheck $livechecker(%myName)
+  if (%livecheck) && (%livecheck != $false) {
+    if ($chan == #p0sitivitybot) {
+      timer $+ $chan 1 $rand(1,45) { msg $chan $chr(63) $+ HOSTME | echo -m @Logs $timestamp 9Entered into the raffle for channel  $+ $chan $+ . USED $chr(63) $+ HOSTME }
       return
     }
-    else { 
-      timer $+ $chan 1 $rand(1,45) { msg $chan !hostme | echo -m @Logs $timestamp Entered you were entered into the raffle for channel $+ $chan $+ . }
+    elseif ($chan == #shouman) {
+      timer $+ $chan 1 $rand(1,45) { msg $chan $chr(36) $+ HOSTME | echo -m @Logs $timestamp 9Entered into the raffle for channel  $+ $chan $+ . USED $chr(36) $+ HOSTME }
+      return
+    }
+    else {
+      timer $+ $chan 1 $rand(1,45) { msg $chan !hostme | echo -m @Logs $timestamp 9Entered into the raffle for channel  $+ $chan $+ . USED $chr(33) $+ HOSTME }
     }
   }
+  else { echo -m @Logs $timestamp  4Not Entered into the raffle for $chan $+ . $chr(91) $+ not live $+ $chr(93) }
 }
 ;;if you have posted the same message too soon, it will try again in 32 seconds.
 ;; this will only happen once as to not keep infinitely looping.
@@ -101,13 +106,17 @@ ON *:NOTICE:*identical to the previous*:#: {
   if (%advertson) && (%retry < 1) {
     VAR %retry 0
     SET %tryagain $chan
-    	INC %retry 1
-    .timer.tryagain 1 32 { msg %tryagain !hostme | echo -m @Logs $timestamp Entered you were entered into the raffle for channel $+ %tryagain $+ . }
+    INC %retry 1
+    .timer.tryagain 1 32 { msg %tryagain !hostme | echo -m @Logs $timestamp 9Entered you were entered into the raffle for channel $+ %tryagain $+ . }
   }
+}
+;;notice if room is in followers-only mode.
+ON *:NOTICE:*followers-only mode*:#: {
+  echo -m @Logs $timestamp  4Not Entered into the raffle for $chan $+ . $chr(91) $+ not following $+ $chr(93) Click here and follow: 12https://twitch.tv/ $+ $remove($chan, $chr(35))
 }
 ;;this will let the dev know if anyone is running an outdated version. dev will message you to update.
 ON *:text:!version:#: {
-  if ($nick == twitchbluecat) {
+  if ($nick == MrDocDC) {
     msg $nick I'm running the Auto !HOSTME Bot VERSION: %version
   }
 }
@@ -121,12 +130,39 @@ alias startclear {
     INC %xx
   }
 }
+;;this will call the alias to verify the streamer is live
+;; in oter words, it will only send the message if you are live streaming!
+alias livechecker {
+  JSONOpen -uw livecheck https://api.twitch.tv/kraken/streams/ $+ $1 $+ ?nocache= $+ $ticks
+  JSONHttpHeader livecheck Client-ID avm4vi7zv0xpjkpi3d4x0qzk8xbrdw8
+  JSONHttpFetch livecheck
+  VAR %x $IIF($json(livecheck,stream,created_at).value,$true,$false)
+  JSONClose livecheck
+  RETURN %x
+}
+
 ;======================= end bot =======================
 ;=======================================================
 
-
 ;=======================================================
 ;===================== Change Logs =====================
+;
+; v 0.1.4.3 12MAR2019
+;           + Minor changes to colors and menu
+;           + Added notice of followers-only mode in @Logs window
+;
+; v 0.1.4.2 03MAR2019
+;           + fixed live checker
+;           + Need: notice of not following; follower-only chat
+;
+; v 0.1.4.1 03MAR2019
+;           + added more channels to join
+;           + patched
+;
+; v 0.1.4.0 06NOV2018
+;           + changed channels
+;			+ !hostme only sends if streamer is live
+;			+ updated website and video
 ;
 ; v 0.1.3.0 14OCT2018
 ;           + changed channels
