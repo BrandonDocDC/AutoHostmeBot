@@ -20,5 +20,4 @@ This is a bot that will join irc.Twitch.tv with your account (you may need to up
 4) Register mIRC $10:
 >   ↪︎    https://www.mirc.co.uk/register.php?coupon=MIRC-SWV0-MNKL
 
-## 4) if you have any issues, please contact me via email:
-> admin@bluecat.live
+## 4) if you have any issues, SUPPORT NO LONGER AVAILABLE.
